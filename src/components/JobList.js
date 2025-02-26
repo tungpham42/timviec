@@ -1,66 +1,81 @@
-import axios from "axios";
-import { useState, useEffect } from "react";
-import { Card, Button, Container, Row, Col } from "react-bootstrap";
+import React, { useEffect, useState } from "react";
+import { fetchJobs } from "../services/jobService";
+import { Card, Button, Container, Row, Col, Spinner } from "react-bootstrap";
 import { Link } from "react-router-dom";
-
-const API_KEY = process.env.REACT_APP_FINDWORK_API_KEY;
+import JobSearch from "./JobSearch";
 
 const JobList = () => {
   const [jobs, setJobs] = useState([]);
-  const [search, setSearch] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [level, setLevel] = useState("");
 
   useEffect(() => {
-    fetchJobs();
-  });
-
-  const fetchJobs = async () => {
-    try {
-      const response = await axios.get("https://findwork.dev/api/jobs/", {
-        headers: { Authorization: `Token ${API_KEY}` },
-        params: { search: search, location: "remote" },
-      });
-      setJobs(response.data.results);
-    } catch (error) {
-      console.error("Error fetching jobs:", error);
-    }
-  };
+    const loadJobs = async () => {
+      setLoading(true);
+      const jobsData = await fetchJobs(page, level);
+      setJobs(jobsData);
+      setLoading(false);
+    };
+    loadJobs();
+  }, [page, level]);
 
   return (
     <Container>
-      <Row className="my-3">
-        <Col>
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Search jobs..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </Col>
-        <Col xs="auto">
-          <Button variant="primary" onClick={fetchJobs}>
-            Search
-          </Button>
-        </Col>
-      </Row>
-      <Row>
-        {jobs.map((job) => (
-          <Col key={job.id} md={4} className="mb-3">
-            <Card>
-              <Card.Body>
-                <Card.Title>{job.title}</Card.Title>
-                <Card.Subtitle className="mb-2 text-muted">
-                  {job.company_name}
-                </Card.Subtitle>
-                <Card.Text>{job.location || "Remote"}</Card.Text>
-                <Button as={Link} to={`/job/${job.id}`} variant="primary">
-                  Details
-                </Button>
-              </Card.Body>
-            </Card>
-          </Col>
-        ))}
-      </Row>
+      <h2 className="my-4 text-center">Job Listings</h2>
+
+      <JobSearch
+        onSearch={(lvl) => {
+          setLevel(lvl);
+          setPage(1); // Reset to first page on new search
+        }}
+      />
+
+      {loading ? (
+        <Spinner animation="border" />
+      ) : (
+        <Row>
+          {jobs.length > 0 ? (
+            jobs.map((job) => (
+              <Col xl={3} lg={3} md={6} sm={6} key={job.id} className="mb-4">
+                <Card className="mb-3 h-100">
+                  <Card.Body className="d-flex flex-column">
+                    <Card.Title>{job.name}</Card.Title>
+                    <Card.Text>
+                      🏢 {job.company?.name || "Unknown Company"}
+                    </Card.Text>
+                    <Card.Text>
+                      📍{" "}
+                      {job.locations?.map((loc) => loc.name).join(", ") ||
+                        "Location not specified"}
+                    </Card.Text>
+                    <Card.Text>
+                      🏆{" "}
+                      {job.levels?.map((lvl) => lvl.name).join(", ") || "N/A"}
+                    </Card.Text>
+                    <Link
+                      to={`/job/${job.id}`}
+                      className="btn btn-primary mt-auto"
+                    >
+                      View Details
+                    </Link>
+                  </Card.Body>
+                </Card>
+              </Col>
+            ))
+          ) : (
+            <p className="text-center">No jobs found.</p>
+          )}
+        </Row>
+      )}
+
+      <div className="d-flex justify-content-center my-4">
+        <Button onClick={() => setPage(page - 1)} disabled={page === 1}>
+          Previous
+        </Button>
+        <span className="mx-3">Page {page}</span>
+        <Button onClick={() => setPage(page + 1)}>Next</Button>
+      </div>
     </Container>
   );
 };
