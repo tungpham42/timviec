@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { Container, Card, Button } from "react-bootstrap";
 
-const API_KEY = "79dffa85571747c057ecd5086c37764862b6f950";
+const API_KEY = process.env.REACT_APP_FINDWORK_API_KEY;
 
 const JobDetail = () => {
   const { id } = useParams();
@@ -11,7 +11,7 @@ const JobDetail = () => {
 
   useEffect(() => {
     fetchJobDetails();
-  }, []);
+  });
 
   const fetchJobDetails = async () => {
     try {
