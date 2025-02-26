@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Card, Button, Container, Row, Col } from "react-bootstrap";
 import { Link } from "react-router-dom";
 
-const API_KEY = process.env.REACT_APP_FINDWORK_API_KEY;
+const API_KEY = "79dffa85571747c057ecd5086c37764862b6f950";
 
 const JobList = () => {
   const [jobs, setJobs] = useState([]);
